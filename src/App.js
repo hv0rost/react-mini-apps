@@ -1,31 +1,57 @@
-import { useState } from "react"
+import React, { useEffect, useState } from "react"
 import "./index.scss"
+import { Success } from "./components/Success"
+import { Users } from "./components/Users"
 
-function App() {
-  let [count, setCount] = useState(0)
+// Тут список пользователей: https://reqres.in/api/users
 
-  function onClickPlus() {
-    setCount(count + 1)
+export default function App() {
+  const [users, setUsers] = useState([])
+  const [isLoading, setLoading] = useState(true)
+  const [invites, setInvites] = useState([])
+  const [success, setSuccess] = useState(false)
+  const [searchValue, setSearchValue] = useState("")
+
+  useEffect(() => {
+    fetch("https://reqres.in/api/users")
+      .then((res) => res.json())
+      .then((json) => setUsers(json.data))
+      .catch((err) => {
+        console.log(err)
+        alert("Произошла ошибка при получении данных")
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  function onChangeSearchValue(e) {
+    setSearchValue(e.target.value)
   }
 
-  function onClickMinus() {
-    setCount(count - 1)
+  function onClickInvite(id) {
+    if (invites.includes(id))
+      setInvites((prev) => prev.filter((item) => item !== id))
+    else setInvites((prev) => [...prev, id])
+  }
+
+  function onClickSendInvites() {
+    setSuccess(true)
   }
 
   return (
     <div className="App">
-      <div>
-        <h2>Счетчик:</h2>
-        <h1>{count}</h1>
-        <button onClick={onClickMinus} className="minus">
-          - Минус
-        </button>
-        <button onClick={onClickPlus} className="plus">
-          Плюс +
-        </button>
-      </div>
+      {success ? (
+        <Success count={invites.length} />
+      ) : (
+        <Users
+          searchValue={searchValue}
+          onChangeSearchValue={onChangeSearchValue}
+          items={users}
+          isLoading={isLoading}
+          onClickInvite={onClickInvite}
+          invites={invites}
+          onClickSendInvites={onClickSendInvites}
+        />
+      )}
     </div>
   )
 }
-
-export default App
